@@ -2,10 +2,10 @@
 import { renderNote } from '@/components/feature/NoteElement';
 import { Colors, Radius, Shadow, Spacing, Typography } from '@/constants/theme';
 import { useNotesContext } from '@/contexts/NotesContext';
+import { NoNoteThumbnail } from '@/fractions/noNoteThumbnail';
 import { useNotesList } from '@/hooks/useNotes';
 import { NoteFile, createNewNote, saveNote } from '@/services/notesService';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
@@ -16,27 +16,9 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    View,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - Spacing.md * 3) / 2;
-
-function formatDate(ts: number): string {
-    const d = new Date(ts);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    const days = Math.floor(diff / 86400000);
-    if (days === 0) {
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (days === 1) {
-        return 'Yesterday';
-    } else if (days < 7) {
-        return d.toLocaleDateString([], { weekday: 'short' });
-    }
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-}
 
 export default function NotesListScreen() {
     const router = useRouter();
@@ -45,6 +27,9 @@ export default function NotesListScreen() {
     const [showNewModal, setShowNewModal] = useState(false);
     const [newTitle, setNewTitle] = useState('');
     const [searchText, setSearchText] = useState('');
+
+    const { width } = Dimensions.get('window');
+    const CARD_WIDTH = (width - Spacing.md * 3);
 
     useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -73,7 +58,7 @@ export default function NotesListScreen() {
         : notes;
 
     const noteThumbnailItem = ({ item }: { item: NoteFile }) => {
-        return renderNote(item, openNote, handleDelete )
+        return renderNote(item, CARD_WIDTH, openNote, handleDelete )
     }
 
     return (
@@ -111,30 +96,14 @@ export default function NotesListScreen() {
 
             {/* Zero note items */}
             {filtered.length === 0 && !loading ? (
-                <View style={styles.emptyState}>
-                    <Image
-                        source={require('@/assets/images/onboarding-hero.png')}
-                        style={styles.emptyImage}
-                        contentFit="contain"
-                    />
-                    <Text style={styles.emptyTitle}>No Notes Yet</Text>
-                    <Text style={styles.emptyBody}>Tap the + button to create your first note and start writing with your stylus.</Text>
-                    <Pressable
-                        style={({ pressed }) => [styles.emptyBtn, pressed && { opacity: 0.8 }]}
-                        onPress={() => { setNewTitle(''); setShowNewModal(true); }}
-                    >
-                        <MaterialIcons name="add" size={20} color={Colors.bg} />
-                        <Text style={styles.emptyBtnText}>New Note</Text>
-                    </Pressable>
-                </View>
+                NoNoteThumbnail(setNewTitle,setShowNewModal)
             ) : (
-                // Actual Note Thumbnail items
+                // Actual Note Thumbnail items - need to rework this trash
                 <FlatList
-                    id="note-items"
                     data={filtered}
                     renderItem={noteThumbnailItem}
                     keyExtractor={item => item.id}
-                    numColumns={4}
+                    numColumns={2}
                     columnWrapperStyle={styles.row}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
@@ -152,6 +121,7 @@ export default function NotesListScreen() {
                             id='new-note-name-id'
                             placeholder="Note title..."
                             placeholderTextColor={Colors.textMuted}
+                            style={styles.inputStyles}
                             value={newTitle}
                             onChangeText={setNewTitle}
                             autoFocus
@@ -218,66 +188,6 @@ const styles = StyleSheet.create({
     },
     listContent: { paddingHorizontal: Spacing.md, paddingBottom: 40 },
     row: { gap: Spacing.md, marginBottom: Spacing.md },
-    // card: {
-    //     width: CARD_WIDTH,
-    //     backgroundColor: Colors.surface,
-    //     borderRadius: Radius.md,
-    //     overflow: 'hidden',
-    //     ...Shadow.card,
-    // },
-    // cardThumb: {
-    //     height: CARD_WIDTH * 1.3,
-    //     backgroundColor: Colors.pageLinedBg,
-    //     position: 'relative',
-    // },
-    // thumbImage: { width: '100%', height: '100%' },
-    // thumbPlaceholder: {
-    //     flex: 1,
-    //     backgroundColor: Colors.pageLinedBg,
-    //     padding: 10,
-    //     justifyContent: 'center',
-    // },
-    // linedPreview: { gap: 10 },
-    // line: {
-    //     height: 1,
-    //     backgroundColor: Colors.pageLinedLine,
-    //     marginHorizontal: 4,
-    // },
-    // pageCount: {
-    //     position: 'absolute',
-    //     bottom: 6,
-    //     right: 6,
-    //     flexDirection: 'row',
-    //     alignItems: 'center',
-    //     backgroundColor: 'rgba(0,0,0,0.4)',
-    //     paddingHorizontal: 5,
-    //     paddingVertical: 2,
-    //     borderRadius: 4,
-    //     gap: 2,
-    // },
-    // pageCountText: { fontSize: 10, color: Colors.textSecondary },
-    // cardInfo: { padding: Spacing.sm },
-    // cardTitle: { ...Typography.caption, color: Colors.textPrimary, fontWeight: '600', marginBottom: 3 },
-    // cardDate: { fontSize: 11, color: Colors.textMuted },
-    emptyState: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: Spacing.xl,
-    },
-    emptyImage: { width: 220, height: 300, marginBottom: Spacing.lg },
-    emptyTitle: { ...Typography.h2, color: Colors.textPrimary, marginBottom: Spacing.sm, textAlign: 'center' },
-    emptyBody: { ...Typography.body, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: Spacing.xl },
-    emptyBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: Colors.accent,
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: 12,
-        borderRadius: Radius.full,
-        gap: Spacing.xs,
-    },
-    emptyBtnText: { color: Colors.bg, fontWeight: '600', fontSize: 16 },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.7)',
@@ -306,4 +216,10 @@ const styles = StyleSheet.create({
     modalBtnCreate: { backgroundColor: Colors.accent },
     modalBtnCancelText: { color: Colors.textSecondary, fontWeight: '600' },
     modalBtnCreateText: { color: Colors.bg, fontWeight: '600' },
+    inputStyles: {
+        color: Colors.textPrimary,
+        padding: 8,
+        backgroundColor: Colors.bg,
+        borderRadius: 8
+    }
 });

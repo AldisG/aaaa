@@ -4,34 +4,35 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const CARD_WIDTH = 100
-
-function formatDate(ts: number): string {
-    const d = new Date(ts);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    const days = Math.floor(diff / 86400000);
-    if (days === 0) {
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (days === 1) {
-        return 'Yesterday';
-    } else if (days < 7) {
-        return d.toLocaleDateString([], { weekday: 'short' });
+export const renderNote = (
+    item: NoteFile, 
+    CARD_WIDTH: number,
+    openNote: Function, 
+    handleDelete: Function,
+) => {
+    function formatDate(ts: number): string {
+        const d = new Date(ts);
+        const now = new Date();
+        const diff = now.getTime() - d.getTime();
+        const days = Math.floor(diff / 86400000);
+        if (days === 0) {
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if (days === 1) {
+            return 'Yesterday';
+        } else if (days < 7) {
+            return d.toLocaleDateString([], { weekday: 'short' });
+        }
+        return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-}
     
-    export const renderNote = (
-        item: NoteFile, 
-        openNote: Function, 
-        handleDelete: Function,
-    ) => (
+    return (
         <Pressable
-            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
+            id={'note-card-thumbnail--' +  item.id}
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }]}]}
             onPress={() => openNote(item)}
             onLongPress={() => handleDelete(item)}
         >
-            <View style={styles.cardThumb}>
+            <View style={{...styles.cardThumb, height: CARD_WIDTH * .25, width: CARD_WIDTH * .5}} >
                 {item.thumbnail ? (
                     <Image source={{ uri: item.thumbnail }} style={styles.thumbImage} contentFit="cover" />
                 ) : (
@@ -54,11 +55,10 @@ function formatDate(ts: number): string {
             </View>
         </Pressable>
     );
+}
 
-    const styles = StyleSheet.create({
-
+const styles = StyleSheet.create({
     cardThumb: {
-        height: CARD_WIDTH * 1.3,
         backgroundColor: Colors.pageLinedBg,
         position: 'relative',
     },
@@ -70,11 +70,10 @@ function formatDate(ts: number): string {
         padding: 10,
         justifyContent: 'center',
     },
-        cardInfo: { padding: Spacing.sm },
+    cardInfo: { padding: Spacing.sm },
     cardTitle: { ...Typography.caption, color: Colors.textPrimary, fontWeight: '600', marginBottom: 3 },
     cardDate: { fontSize: 11, color: Colors.textMuted },
     card: {
-        width: CARD_WIDTH,
         backgroundColor: Colors.surface,
         borderRadius: Radius.md,
         overflow: 'hidden',
