@@ -1,77 +1,52 @@
-import { Ionicons } from "@expo/vector-icons";
-import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
-import { ParamListBase, RouteProp, useNavigationState } from '@react-navigation/native';
-import { Tabs } from "expo-router";
-import { ComponentProps } from "react";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
+import { MaterialIcons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type IconName = ComponentProps<typeof Ionicons>["name"];
+export default function TabLayout() {
 
-const tabBarButtonStyleElement = (props: BottomTabBarButtonProps, route: RouteProp<ParamListBase, string>, isLarge: boolean) => {
-    const activeRouteName = useNavigationState(state =>
-        state.routes[state.index].name
-    );
+  const insets = useSafeAreaInsets();
 
-    const { accessibilityState, onPress } = props;
-    const focused = accessibilityState?.selected;
+  const tabBarStyle = {
+    height: Platform.select({
+      ios: insets.bottom + 60,
+      android: insets.bottom + 60,
+      default: 70,
+    }),
+    paddingTop: 8,
+    paddingBottom: Platform.select({
+      ios: insets.bottom + 8,
+      android: insets.bottom + 8,
+      default: 8,
+    }),
+    paddingHorizontal: 16,
+    backgroundColor: '#0a0a0a',
+    borderTopWidth: 1,
+    borderTopColor: '#1a1a1a',
+  };
 
-    const iconName: IconName = (route.name === "pokemon") ? "flame" : "home";
-    const color = (route.name === activeRouteName) ? "orange" : "#eee"
-
-    return (
-        <Pressable
-            onPress={onPress}
-            style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            <View
-                style={{
-                    backgroundColor: focused ? "#3b2a7a" : "transparent",
-                    padding: 8,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexDirection: "row",
-                    gap: isLarge ? 6 : 0,
-                }}
-            >
-                <Ionicons name={iconName} size={20} color={color} />
-
-                {isLarge && (
-                    <Text style={{ color: color, fontSize: 12 }}>
-                        {route.name}
-                    </Text>
-                )}
-            </View>
-        </Pressable>
-    );
-}
-
-export default function Layout() {
-    const { width } = useWindowDimensions();
-    const isLarge = width >= 768;
-
-    return (
-        <Tabs
-            screenOptions={({ route }) => ({
-                headerShown: false,
-                tabBarStyle: {
-                    position: "absolute",
-                    bottom: 8,
-                    left: isLarge ? "25%" : 16,
-                    right: isLarge ? "25%" : 16,
-                    height: 60,
-                    borderRadius: 20,
-                    backgroundColor: "#2b1e5a",
-                    borderTopWidth: 0,
-                    elevation: 8,
-                    paddingBottom: 0,
-                },
-                tabBarButton: (props) => tabBarButtonStyleElement(props, route, isLarge)
-            })}
-        />
-    );
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle,
+        tabBarActiveTintColor: '#FFD700',
+        tabBarInactiveTintColor: '#666',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Gallery',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="photo-library" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tabs>
+  );
 }
